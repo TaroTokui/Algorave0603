@@ -31,6 +31,7 @@ public class Instancing : MonoBehaviour
         LayoutFlat,
         LayoutGravity,
         LayoutSimpleNoise,
+        LayoutShape,
         LayoutFree
     }
 
@@ -125,12 +126,7 @@ public class Instancing : MonoBehaviour
     [SerializeField]
     //[Range(0, 1)]
     float _InputHi = 0.0f;
-
-    ///// アニメーションの周期
-    //[Range(0.01f, 100)]
-    //[SerializeField]
-    //float _Octave = 1;
-
+    
     #endregion // Serialize Fields
 
     // ==============================
@@ -149,10 +145,11 @@ public class Instancing : MonoBehaviour
     // instanceの合計数
     int _instanceCount;
 
-    #endregion // Private Fields
     private GameObject noisePlane;
 
     private Texture2D m_texture;
+
+    #endregion // Private Fields
 
     // --------------------------------------------------
     #region // MonoBehaviour Methods
@@ -161,14 +158,14 @@ public class Instancing : MonoBehaviour
     {
         _instanceCount = _instanceCountX * _instanceCountY;
 
-        // バッファ生成
+        // allocate buffers
         _CubeDataBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(CubeData)));
         _BaseCubeDataBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(CubeData)));
         _PrevCubeDataBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(CubeData)));
         _GPUInstancingArgsBuffer = new ComputeBuffer(1, _GPUInstancingArgs.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
         //var cubeDataArr = new CubeData[_instanceCount];
 
-        // 初期化
+        // init cube position
         int kernelId = _ComputeShader.FindKernel("Init");
         _ComputeShader.SetInt("_Width", _instanceCountX);
         _ComputeShader.SetInt("_Height", _instanceCountY);
@@ -202,6 +199,9 @@ public class Instancing : MonoBehaviour
                 break;
             case LayoutType.LayoutSimpleNoise:
                 kernelId = _ComputeShader.FindKernel("UpdateSimpleNoise");
+                break;
+            case LayoutType.LayoutShape:
+                kernelId = _ComputeShader.FindKernel("UpdateShape");
                 break;
             default:
                 kernelId = _ComputeShader.FindKernel("Update");
