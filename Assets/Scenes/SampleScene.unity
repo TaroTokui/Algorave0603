@@ -219,7 +219,7 @@ MonoBehaviour:
   StopCamera: 0
   currentCameraType: 0
   RotationSpeed: 10
-  Distance: 100
+  Distance: 50
   HeightAngle: 45
   PitchLevel: 0
   MoveThreshold: 0.5
@@ -431,8 +431,8 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 478135793}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 100, y: 1, z: 100}
+  m_LocalPosition: {x: 0, y: -20, z: 0}
+  m_LocalScale: {x: 1000, y: 1, z: 1000}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 6
@@ -630,7 +630,7 @@ MonoBehaviour:
   _BoundSize: {x: 300, y: 300, z: 300}
   _Phi: 3.1415927
   _Lambda: 1
-  _Amplitude: 1
+  _Amplitude: 20
   _Gravity: 9.8
   _Speed: 1
   useOsc: 1

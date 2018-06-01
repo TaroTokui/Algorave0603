@@ -219,35 +219,41 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 	float3 basePos = _BaseCubeDataBuffer[index].Position;
 	float4 noise = _NoiseTex[basePos.xz + float2(_Width / 2, _Height / 2)];
 	float3 prevPos = _CubeDataBuffer[index].Position;
+	float3 prevRot = _CubeDataBuffer[index].Rotation;
 
 	float posX = (index % _Width) / (float)_Width;
 	float posY = (index / _Width) / (float)_Height;
 
 	float3 pos = float3(0,0,0);
+	float3 rot = float3(0, 0, 0);
+	//rot = float3(noise.x * 10, noise.x * 20, noise.x * 30);
+
 	// plane
 	pos.x = (posX - 0.5) * 256;
 	pos.z = (posY - 0.5) * 256;
-	pos.y = 0;
+	//pos.y = noise.x * _Amplitude * pow(_InputHigh,1) * 5;
+	pos.y = noise.x * _Amplitude;
 	
 	// circle
-	pos.x = cos(posX * PI2) * 100;
-	pos.z = sin(posX * PI2) * 100;
-	pos.y = 0;
+	//pos.x = cos(posX * PI2) * 20;
+	//pos.z = sin(posX * PI2) * 20;
+	//pos.y = 0;
 
 	// sylinder
-	pos = Sylinder(posX, posY, 5);
+	//pos = Sylinder(posX, posY, 30);
 
 	// sphere
-	//pos = Sphere(posX, posY, 30);
+	//pos = Sphere(posX, posY, 20);
 
 	// noise direction
 	float3 nn = normalize(pos) * noise.x;
 	//pos += nn * _Amplitude * _InputLow;
+	//pos += nn * _Amplitude * _InputHigh * 20;
 
+	// update
 	pos = lerp(pos, prevPos, 0.9);
+	rot = lerp(rot, prevRot, 0.99);
 
-	//_PrevCubeDataBuffer[index].Position = pos;// float3(pos.x, y, pos.z);
-	_CubeDataBuffer[index].Position = pos;// float3(basePos.x, noise.x * 20 * _Amplitude, basePos.z);
-	//_CubeDataBuffer[index].Rotation = float3(noise.x * 10, noise.x * 20, noise.x * 30);
-	_CubeDataBuffer[index].Rotation = float3(0, 0, 0);
+	_CubeDataBuffer[index].Position = pos;
+	_CubeDataBuffer[index].Rotation = rot;
 }

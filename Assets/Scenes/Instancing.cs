@@ -226,6 +226,7 @@ public class Instancing : MonoBehaviour
         _ComputeShader.SetFloat("_StepZ", _CubeMeshScale.z);
         _ComputeShader.SetFloat("_InputLow", _InputLow);
         _ComputeShader.SetFloat("_InputMid", _InputMid);
+        _ComputeShader.SetFloat("_InputHigh", _InputHigh);
         _ComputeShader.SetFloat("_InputKick", _InputKickdetection);
         _ComputeShader.SetFloat("_InputSnare", _InputSnaredetection);
         _ComputeShader.SetFloat("_InputRythm", _InputRythm);
