@@ -12,7 +12,6 @@
 #include "noise/SimplexNoise2D.hlsl"
 #include "Common.cginc"
 
-
 struct CubeData
 {
 	//float3 BasePosition;
@@ -170,6 +169,7 @@ void UpdateSimpleNoise(uint3 id : SV_DispatchThreadID)
 	const unsigned int index = id.x;
 	float3 basePos = _BaseCubeDataBuffer[index].Position;
 	float4 noise = _NoiseTex[basePos.xz + float2(_Width / 2, _Height / 2)];
+	//float4 noise = _NoiseTex[basePos.xz + float2(_Width / 2, _Height / 2)] * sin(basePos.x * _InputLow * 0.1);
 	float3 prevPos = _CubeDataBuffer[index].Position;
 
 	float3 pos = lerp(float3(basePos.x, noise.x * 20 * _Amplitude, basePos.z), prevPos, 0.9);
@@ -178,6 +178,34 @@ void UpdateSimpleNoise(uint3 id : SV_DispatchThreadID)
 	_CubeDataBuffer[index].Position = pos;// float3(basePos.x, noise.x * 20 * _Amplitude, basePos.z);
 	//_CubeDataBuffer[index].Rotation = float3(noise.x * 10, noise.x * 20, noise.x * 30);
 	_CubeDataBuffer[index].Rotation = float3(0, 0, 0);
+}
+
+float3 Sylinder(float x, float y, float s)
+{
+	float PI = 3.1415926535;
+	float PI2 = 6.28318530718;
+
+	float3 dst;
+
+	dst.x = cos(x * PI2) * s;
+	dst.z = sin(x * PI2) * s;
+	dst.y = sin(y * PI2) * s;
+
+	return dst;
+}
+
+float3 Sphere(float x, float y, float s)
+{
+	float PI = 3.1415926535;
+	float PI2 = 6.28318530718;
+
+	float3 dst;
+
+	dst.x = cos(x * PI) * s * cos(y * PI2);
+	dst.z = sin(x * PI) * s * cos(y * PI2);
+	dst.y = sin(y * PI2) * s;
+
+	return dst;
 }
 
 [numthreads(ThreadBlockSize, 1, 1)]
@@ -202,18 +230,19 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 	pos.y = 0;
 	
 	// circle
-	//pos.x = cos(posX * PI2) * 100;
-	//pos.z = sin(posX * PI2) * 100;
-	//pos.y = 0;
+	pos.x = cos(posX * PI2) * 100;
+	pos.z = sin(posX * PI2) * 100;
+	pos.y = 0;
+
+	// sylinder
+	pos = Sylinder(posX, posY, 5);
 
 	// sphere
-	//pos.x = cos(posX * PI) * 100 * cos(posY * PI2);
-	//pos.z = sin(posX * PI) * 100 * cos(posY * PI2);
-	//pos.y = sin(posY * PI2) * 100;
+	//pos = Sphere(posX, posY, 30);
 
 	// noise direction
-	//float3 nn = normalize(pos) * noise.x;
-	//pos += nn * _Amplitude;
+	float3 nn = normalize(pos) * noise.x;
+	//pos += nn * _Amplitude * _InputLow;
 
 	pos = lerp(pos, prevPos, 0.9);
 

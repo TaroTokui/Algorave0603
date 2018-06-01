@@ -217,10 +217,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   targetObject: {fileID: 1920655199}
   StopCamera: 0
+  currentCameraType: 0
   RotationSpeed: 10
   Distance: 100
   HeightAngle: 45
   PitchLevel: 0
+  MoveThreshold: 0.5
+  useOsc: 1
+  _OscReceiver: {fileID: 1526664434}
 --- !u!20 &282840813
 Camera:
   m_ObjectHideFlags: 0
@@ -363,7 +367,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!64 &478135794
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -554,7 +558,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _InputLow: 0
   _InputMid: 0
-  _InputHi: 0
+  _InputHigh: 0
+  _InputKickdetection: 0
+  _InputSnaredetection: 0
+  _InputRythm: 0
+  _InputSpectralcentroid: 0
+  _InputFmp: 0
+  _InputSmp: 0
 --- !u!114 &1526664435
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -625,9 +635,6 @@ MonoBehaviour:
   _Speed: 1
   useOsc: 1
   _OscReceiver: {fileID: 1526664434}
-  _InputLow: 0
-  _InputMid: 0
-  _InputHi: 0
 --- !u!4 &1920655199
 Transform:
   m_ObjectHideFlags: 0

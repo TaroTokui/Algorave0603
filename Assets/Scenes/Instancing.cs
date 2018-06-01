@@ -182,6 +182,12 @@ public class Instancing : MonoBehaviour
             _InputLow = _OscReceiver._InputLow;
             _InputMid = _OscReceiver._InputMid;
             _InputHigh = _OscReceiver._InputHigh;
+            _InputKickdetection = _OscReceiver._InputKickdetection;
+            _InputSnaredetection = _OscReceiver._InputSnaredetection;
+            _InputRythm = _OscReceiver._InputRythm;
+            _InputSpectralcentroid = _OscReceiver._InputSpectralcentroid;
+            _InputFmp = _OscReceiver._InputFmp;
+            _InputSmp = _OscReceiver._InputSmp;
         }
 
         updateLayoutType();
