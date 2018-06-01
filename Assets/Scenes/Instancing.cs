@@ -115,18 +115,16 @@ public class Instancing : MonoBehaviour
     OscReceiver _OscReceiver;
 
     /// 音声入力
-    [SerializeField]
-    //[Range(0, 1)]
     float _InputLow = 0.0f;
-
-    [SerializeField]
-    //[Range(0, 1)]
     float _InputMid = 0.0f;
+    float _InputHigh = 0.0f;
+    float _InputKickdetection = 0.0f;
+    float _InputSnaredetection = 0.0f;
+    float _InputRythm = 0.0f;
+    float _InputSpectralcentroid = 0.0f;
+    float _InputFmp = 0.0f;
+    float _InputSmp = 0.0f;
 
-    [SerializeField]
-    //[Range(0, 1)]
-    float _InputHi = 0.0f;
-    
     #endregion // Serialize Fields
 
     // ==============================
@@ -183,7 +181,7 @@ public class Instancing : MonoBehaviour
         {
             _InputLow = _OscReceiver._InputLow;
             _InputMid = _OscReceiver._InputMid;
-            _InputHi = _OscReceiver._InputHi;
+            _InputHigh = _OscReceiver._InputHigh;
         }
 
         updateLayoutType();
@@ -222,7 +220,9 @@ public class Instancing : MonoBehaviour
         _ComputeShader.SetFloat("_StepZ", _CubeMeshScale.z);
         _ComputeShader.SetFloat("_InputLow", _InputLow);
         _ComputeShader.SetFloat("_InputMid", _InputMid);
-        _ComputeShader.SetFloat("_InputHi", _InputHi);
+        _ComputeShader.SetFloat("_InputKick", _InputKickdetection);
+        _ComputeShader.SetFloat("_InputSnare", _InputSnaredetection);
+        _ComputeShader.SetFloat("_InputRythm", _InputRythm);
         _ComputeShader.SetBuffer(kernelId, "_CubeDataBuffer", _CubeDataBuffer);
         _ComputeShader.SetBuffer(kernelId, "_BaseCubeDataBuffer", _BaseCubeDataBuffer);
         _ComputeShader.SetBuffer(kernelId, "_PrevCubeDataBuffer", _PrevCubeDataBuffer);
