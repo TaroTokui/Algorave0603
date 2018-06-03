@@ -205,11 +205,12 @@ public class Instancing : MonoBehaviour
             _InputSmp = _OscReceiver._InputSmp;
         }
 
-        //if(tmpPuls)
-        //{
-        //    tmpPuls = false;
-        //    _InputKickdetection = 1.0f;
-        //}
+        if (Input.GetKey(KeyCode.Space))
+        {
+            _InputKickdetection = 1.0f;
+        }else{
+            _InputKickdetection = 0.0f;
+        }
 
         updateLayoutType();
 
@@ -254,9 +255,9 @@ public class Instancing : MonoBehaviour
         _ComputeShader.SetFloat("_StepZ", _CubeMeshScale.z);
         _ComputeShader.SetFloat("_InputLow", _InputLow);
         _ComputeShader.SetFloat("_InputMid", _InputMid);
-        _ComputeShader.SetFloat("_InputHigh", _InputHigh); 
-        //_ComputeShader.SetFloat("_InputKick", _InputKickdetection);
-        _ComputeShader.SetFloat("_InputKick", tmpPuls);
+        _ComputeShader.SetFloat("_InputHigh", _InputHigh);
+        _ComputeShader.SetFloat("_InputKick", _InputKickdetection);
+        //_ComputeShader.SetFloat("_InputKick", tmpPuls);
         _ComputeShader.SetFloat("_InputSnare", _InputSnaredetection);
         _ComputeShader.SetFloat("_InputRythm", _InputRythm);
         _ComputeShader.SetBuffer(kernelId, "_CubeDataBuffer", _CubeDataBuffer);

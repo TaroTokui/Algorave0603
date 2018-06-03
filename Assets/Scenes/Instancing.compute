@@ -195,7 +195,7 @@ float3 Sylinder(float x, float y, float s)
 
 	dst.x = cos(x * PI2) * s;
 	dst.z = sin(x * PI2) * s;
-	dst.y = sin(y * PI2) * s;
+	dst.y = y*s*1.5;// sin(y * PI2) * s;
 
 	return dst;
 }
@@ -214,6 +214,17 @@ float3 Sphere(float x, float y, float s)
 	return dst;
 }
 
+float3 RandomMove(float x, float z)
+{
+	float3 dst;
+
+	//float y = _Amplitude * (1 + sin(x / _Lambda + _Phi * _Time)) * Random(index);
+	//y += _Amplitude * (1 + sin(z / _Lambda + _Phi * _Time)) * Random(index + 1);
+	//y *= noise * 10 * _StepY;
+
+	return dst;
+}
+
 [numthreads(ThreadBlockSize, 1, 1)]
 void UpdateShape(uint3 id : SV_DispatchThreadID)
 {
@@ -223,6 +234,7 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 	// インデックス取得
 	const unsigned int index = id.x;
 	float3 basePos = _BaseCubeDataBuffer[index].Position;
+	float3 baseRot = _BaseCubeDataBuffer[index].Rotation;
 	float4 noise = _NoiseTex[basePos.xz + float2(_Width / 2, _Height / 2)];
 	float3 prevPos = _CubeDataBuffer[index].Position;
 	float3 prevRot = _CubeDataBuffer[index].Rotation;
@@ -234,15 +246,13 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 	float3 rot = float3(0, 0, 0);
 	//rot = float3(noise.x * 10, noise.x * 20, noise.x * 30);
 
-	float wave = _WaveBuffer[index % _Width] * _Amplitude;
+	float wave = _WaveBuffer[index / _Width];// *_Amplitude;
 
 	// plane
 	pos.x = (posX - 0.5) * 256;
 	pos.z = (posY - 0.5) * 256;
-	//pos.y = _InputKick;// *_Amplitude;
-	//pos.y = noise.x * _Amplitude * pow(_InputHigh,1) * 5;
-	//pos.y = noise.x * _Amplitude;
-	//pos.y = _WaveBuffer[index] / (float)_Width;
+	//pos.y = (wave) * _Amplitude;
+	pos.y = (wave + noise.x) * _Amplitude;
 	
 	// circle
 	//pos.x = cos(posX * PI2) * 20;
@@ -250,17 +260,24 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 	//pos.y = 0;
 
 	// sylinder
-	//pos = Sylinder(posX, posY, 30);
+	//pos = Sylinder(posX, posY, 15);
+	//pos.y -= 10;
+	//pos += wave * normalize(pos) * _Amplitude;
 
 	// sphere
-	pos = Sphere(posX, posY, 20);
-	pos.y += wave;
+	//pos = Sphere(posX, posY, 20);
+	//pos.y += wave;
+	//pos += wave * normalize(pos) * _Amplitude;
 
 	// noise direction
 	float3 nn = normalize(pos) * noise.x;
-	//pos += nn * _Amplitude * _InputLow;
+	//pos += nn * _Amplitude * 0.7;
 	//pos += nn * _Amplitude * _InputHigh * 20;
-	//pos += nn * _Amplitude * _InputHigh * wave;
+
+
+	// random
+	//pos = RandomMove(posX, posY);
+	//rot += baseRot * 0.1;
 
 	// update
 	pos = lerp(pos, prevPos, 0.9);
@@ -284,7 +301,7 @@ void UpdateWave(uint3 id : SV_DispatchThreadID)
 	const unsigned int index = id.x;
 
 	// update wave
-	float length = 1;
+	float length = 10;
 	float value = 0;
 	float a = 1;
 	unsigned int prevIndex = max(0, index - length);
