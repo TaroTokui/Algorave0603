@@ -165,8 +165,8 @@ public class Instancing : MonoBehaviour
         _CubeDataBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(CubeData)));
         _BaseCubeDataBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(CubeData)));
         _PrevCubeDataBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(CubeData)));
-        _WaveBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(float)));
-        _PrevWaveBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(float)));
+        _WaveBuffer = new ComputeBuffer(_instanceCountX, Marshal.SizeOf(typeof(float)));
+        _PrevWaveBuffer = new ComputeBuffer(_instanceCountX, Marshal.SizeOf(typeof(float)));
         _GPUInstancingArgsBuffer = new ComputeBuffer(1, _GPUInstancingArgs.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
         //var cubeDataArr = new CubeData[_instanceCount];
 
@@ -177,9 +177,15 @@ public class Instancing : MonoBehaviour
         _ComputeShader.SetBuffer(kernelId, "_CubeDataBuffer", _CubeDataBuffer);
         _ComputeShader.SetBuffer(kernelId, "_BaseCubeDataBuffer", _BaseCubeDataBuffer);
         _ComputeShader.SetBuffer(kernelId, "_PrevCubeDataBuffer", _PrevCubeDataBuffer);
+        //_ComputeShader.SetBuffer(kernelId, "_WaveBuffer", _WaveBuffer);
+        //_ComputeShader.SetBuffer(kernelId, "_PrevWaveBuffer", _PrevWaveBuffer);
+        _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_instanceCount / ThreadBlockSize) + 1), 1, 1);
+
+        kernelId = _ComputeShader.FindKernel("InitWave");
         _ComputeShader.SetBuffer(kernelId, "_WaveBuffer", _WaveBuffer);
         _ComputeShader.SetBuffer(kernelId, "_PrevWaveBuffer", _PrevWaveBuffer);
-        _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_instanceCount / ThreadBlockSize) + 1), 1, 1);
+        _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_instanceCountX / ThreadBlockSize) + 1), 1, 1);
+
 
     }
 
@@ -208,6 +214,13 @@ public class Instancing : MonoBehaviour
         updateLayoutType();
 
         int kernelId;
+
+        // update wave buffer
+        kernelId = _ComputeShader.FindKernel("UpdateWave");
+        _ComputeShader.SetBuffer(kernelId, "_WaveBuffer", _WaveBuffer);
+        _ComputeShader.SetBuffer(kernelId, "_PrevWaveBuffer", _PrevWaveBuffer);
+        _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_instanceCountX / ThreadBlockSize) + 1), 1, 1);
+
         switch (_LayoutTypeEnum)
         {
             case LayoutType.LayoutFlat:
@@ -259,7 +272,7 @@ public class Instancing : MonoBehaviour
         kernelId = _ComputeShader.FindKernel("CopyBuffer");
         _ComputeShader.SetBuffer(kernelId, "_WaveBuffer", _WaveBuffer);
         _ComputeShader.SetBuffer(kernelId, "_PrevWaveBuffer", _PrevWaveBuffer);
-        _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_instanceCount / ThreadBlockSize) + 1), 1, 1);
+        _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_instanceCountX / ThreadBlockSize) + 1), 1, 1);
         
         // GPU Instaicing
         _GPUInstancingArgs[0] = (_CubeMesh != null) ? _CubeMesh.GetIndexCount(0) : 0;
