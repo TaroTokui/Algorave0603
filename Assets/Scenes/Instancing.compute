@@ -234,7 +234,7 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 	float3 rot = float3(0, 0, 0);
 	//rot = float3(noise.x * 10, noise.x * 20, noise.x * 30);
 
-	pos.y = _WaveBuffer[index % _Width];
+	float wave = _WaveBuffer[index % _Width] * _Amplitude;
 
 	// plane
 	pos.x = (posX - 0.5) * 256;
@@ -253,12 +253,14 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 	//pos = Sylinder(posX, posY, 30);
 
 	// sphere
-	//pos = Sphere(posX, posY, 20);
+	pos = Sphere(posX, posY, 20);
+	pos.y += wave;
 
 	// noise direction
 	float3 nn = normalize(pos) * noise.x;
 	//pos += nn * _Amplitude * _InputLow;
 	//pos += nn * _Amplitude * _InputHigh * 20;
+	//pos += nn * _Amplitude * _InputHigh * wave;
 
 	// update
 	pos = lerp(pos, prevPos, 0.9);
@@ -282,9 +284,9 @@ void UpdateWave(uint3 id : SV_DispatchThreadID)
 	const unsigned int index = id.x;
 
 	// update wave
-	float length = 10;
+	float length = 1;
 	float value = 0;
-	float a = 10;
+	float a = 1;
 	unsigned int prevIndex = max(0, index - length);
 	//if (_InputKick > 0.5 && posX < 0.1)
 	//if (_InputKick > 0.5 && posX == 0)
@@ -293,6 +295,8 @@ void UpdateWave(uint3 id : SV_DispatchThreadID)
 		if (index < length)
 		{
 			value = a;
+			//value = a *(float)index / length;
+			//value = a * (float)index / length;
 		}
 		else
 		{
