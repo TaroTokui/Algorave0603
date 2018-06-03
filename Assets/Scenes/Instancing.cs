@@ -114,6 +114,9 @@ public class Instancing : MonoBehaviour
     [SerializeField]
     OscReceiver _OscReceiver;
 
+    [SerializeField]
+    float tmpPuls = 0.0f;
+
     /// 音声入力
     float _InputLow = 0.0f;
     float _InputMid = 0.0f;
@@ -133,6 +136,8 @@ public class Instancing : MonoBehaviour
     ComputeBuffer _CubeDataBuffer;
     ComputeBuffer _BaseCubeDataBuffer;
     ComputeBuffer _PrevCubeDataBuffer;
+    ComputeBuffer _WaveBuffer;
+    ComputeBuffer _PrevWaveBuffer;
 
     /// GPU Instancingの為の引数
     uint[] _GPUInstancingArgs = new uint[5] { 0, 0, 0, 0, 0 };
@@ -160,6 +165,8 @@ public class Instancing : MonoBehaviour
         _CubeDataBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(CubeData)));
         _BaseCubeDataBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(CubeData)));
         _PrevCubeDataBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(CubeData)));
+        _WaveBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(float)));
+        _PrevWaveBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(float)));
         _GPUInstancingArgsBuffer = new ComputeBuffer(1, _GPUInstancingArgs.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
         //var cubeDataArr = new CubeData[_instanceCount];
 
@@ -170,6 +177,8 @@ public class Instancing : MonoBehaviour
         _ComputeShader.SetBuffer(kernelId, "_CubeDataBuffer", _CubeDataBuffer);
         _ComputeShader.SetBuffer(kernelId, "_BaseCubeDataBuffer", _BaseCubeDataBuffer);
         _ComputeShader.SetBuffer(kernelId, "_PrevCubeDataBuffer", _PrevCubeDataBuffer);
+        _ComputeShader.SetBuffer(kernelId, "_WaveBuffer", _WaveBuffer);
+        _ComputeShader.SetBuffer(kernelId, "_PrevWaveBuffer", _PrevWaveBuffer);
         _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_instanceCount / ThreadBlockSize) + 1), 1, 1);
 
     }
@@ -189,6 +198,12 @@ public class Instancing : MonoBehaviour
             _InputFmp = _OscReceiver._InputFmp;
             _InputSmp = _OscReceiver._InputSmp;
         }
+
+        //if(tmpPuls)
+        //{
+        //    tmpPuls = false;
+        //    _InputKickdetection = 1.0f;
+        //}
 
         updateLayoutType();
 
@@ -226,17 +241,26 @@ public class Instancing : MonoBehaviour
         _ComputeShader.SetFloat("_StepZ", _CubeMeshScale.z);
         _ComputeShader.SetFloat("_InputLow", _InputLow);
         _ComputeShader.SetFloat("_InputMid", _InputMid);
-        _ComputeShader.SetFloat("_InputHigh", _InputHigh);
-        _ComputeShader.SetFloat("_InputKick", _InputKickdetection);
+        _ComputeShader.SetFloat("_InputHigh", _InputHigh); 
+        //_ComputeShader.SetFloat("_InputKick", _InputKickdetection);
+        _ComputeShader.SetFloat("_InputKick", tmpPuls);
         _ComputeShader.SetFloat("_InputSnare", _InputSnaredetection);
         _ComputeShader.SetFloat("_InputRythm", _InputRythm);
         _ComputeShader.SetBuffer(kernelId, "_CubeDataBuffer", _CubeDataBuffer);
         _ComputeShader.SetBuffer(kernelId, "_BaseCubeDataBuffer", _BaseCubeDataBuffer);
         _ComputeShader.SetBuffer(kernelId, "_PrevCubeDataBuffer", _PrevCubeDataBuffer);
+        _ComputeShader.SetBuffer(kernelId, "_WaveBuffer", _WaveBuffer);
+        _ComputeShader.SetBuffer(kernelId, "_PrevWaveBuffer", _PrevWaveBuffer);
         _ComputeShader.SetTexture(kernelId, "_NoiseTex", _NoiseTexture);
 
         _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_instanceCount / ThreadBlockSize) + 1), 1, 1);
 
+        // copy buffer
+        kernelId = _ComputeShader.FindKernel("CopyBuffer");
+        _ComputeShader.SetBuffer(kernelId, "_WaveBuffer", _WaveBuffer);
+        _ComputeShader.SetBuffer(kernelId, "_PrevWaveBuffer", _PrevWaveBuffer);
+        _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_instanceCount / ThreadBlockSize) + 1), 1, 1);
+        
         // GPU Instaicing
         _GPUInstancingArgs[0] = (_CubeMesh != null) ? _CubeMesh.GetIndexCount(0) : 0;
         _GPUInstancingArgs[1] = (uint)_instanceCount;
@@ -245,7 +269,7 @@ public class Instancing : MonoBehaviour
         _CubeMaterial.SetVector("_CubeMeshScale", _CubeMeshScale);
         Graphics.DrawMeshInstancedIndirect(_CubeMesh, 0, _CubeMaterial, new Bounds(_BoundCenter, _BoundSize), _GPUInstancingArgsBuffer);
     }
-
+    
     void OnDestroy()
     {
         if (this._CubeDataBuffer != null)
@@ -262,6 +286,16 @@ public class Instancing : MonoBehaviour
         {
             this._PrevCubeDataBuffer.Release();
             this._PrevCubeDataBuffer = null;
+        }
+        if (this._WaveBuffer != null)
+        {
+            this._WaveBuffer.Release();
+            this._WaveBuffer = null;
+        }
+        if (this._PrevWaveBuffer != null)
+        {
+            this._PrevWaveBuffer.Release();
+            this._PrevWaveBuffer = null;
         }
         if (this._GPUInstancingArgsBuffer != null)
         {

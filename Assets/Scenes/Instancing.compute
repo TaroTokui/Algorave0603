@@ -4,6 +4,7 @@
 #pragma kernel UpdateGravity
 #pragma kernel UpdateSimpleNoise
 #pragma kernel UpdateShape
+#pragma kernel CopyBuffer
 
 // スレッドグループのスレッドサイズ
 #define ThreadBlockSize 256
@@ -23,7 +24,9 @@ struct CubeData
 
 RWStructuredBuffer<CubeData> _CubeDataBuffer;
 RWStructuredBuffer<CubeData> _BaseCubeDataBuffer;
-RWStructuredBuffer<CubeData> _PrevCubeDataBuffer;
+RWStructuredBuffer<CubeData> _PrevCubeDataBuffer; 
+RWStructuredBuffer<float> _WaveBuffer;
+RWStructuredBuffer<float> _PrevWaveBuffer;
 Texture2D<float4> _NoiseTex;
 int _Width;
 int _Height;
@@ -80,6 +83,9 @@ void Init(uint3 id : SV_DispatchThreadID)
 
 	_PrevCubeDataBuffer[index].Rotation = _BaseCubeDataBuffer[index].Rotation;
 	_PrevCubeDataBuffer[index].Velocity = float3(0, 0, 0);
+
+	_WaveBuffer[index] = 0;
+	_PrevWaveBuffer[index] = 0;
 }
 
 [numthreads(ThreadBlockSize, 1, 1)]
@@ -228,11 +234,47 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 	float3 rot = float3(0, 0, 0);
 	//rot = float3(noise.x * 10, noise.x * 20, noise.x * 30);
 
+	// update wave
+	float length = 0.01;
+	float value = 0;
+	float a = 10;
+	unsigned int prevIndex = max(0, index - 1);
+	//if (_InputKick > 0.5 && posX < 0.1)
+	//if (_InputKick > 0.5 && posX == 0)
+	if (_InputKick > 0.5)
+	{
+		if (posX < length)
+		{
+			value = a;
+		}
+		else
+		{
+			value = _PrevWaveBuffer[prevIndex];
+		}
+		//pos.y = 50;
+	}
+	else {
+		//pos.y = 1;
+		if (posX == 0)
+		{
+			value = 0;
+		}
+		else
+		{
+			value = _PrevWaveBuffer[prevIndex];
+		}
+	}
+
+	_WaveBuffer[index] = value;
+	pos.y = value;
+
 	// plane
 	pos.x = (posX - 0.5) * 256;
 	pos.z = (posY - 0.5) * 256;
+	//pos.y = _InputKick;// *_Amplitude;
 	//pos.y = noise.x * _Amplitude * pow(_InputHigh,1) * 5;
-	pos.y = noise.x * _Amplitude;
+	//pos.y = noise.x * _Amplitude;
+	//pos.y = _WaveBuffer[index] / (float)_Width;
 	
 	// circle
 	//pos.x = cos(posX * PI2) * 20;
@@ -256,4 +298,11 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 
 	_CubeDataBuffer[index].Position = pos;
 	_CubeDataBuffer[index].Rotation = rot;
+}
+
+[numthreads(ThreadBlockSize, 1, 1)]
+void CopyBuffer(uint3 id : SV_DispatchThreadID)
+{
+	const unsigned int index = id.x;
+	_PrevWaveBuffer[index] = _WaveBuffer[index];
 }
