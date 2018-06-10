@@ -278,7 +278,7 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 
 	// noise direction
 	float3 nn = normalize(pos) * noise.x;
-	pos += nn * _Amplitude * 0.7;
+	//pos += nn * _Amplitude * 0.7;
 
 	//rot = float3(noise.x * 10, noise.x * 20, noise.x * 30);
 
