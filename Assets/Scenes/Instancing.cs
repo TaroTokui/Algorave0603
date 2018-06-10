@@ -51,6 +51,9 @@ public class Instancing : MonoBehaviour
     ComputeShader _ComputeShader;
 
     [SerializeField]
+    SkinnedMeshGrabber _SkinnedMeshGrabber;
+
+    [SerializeField]
     LayoutType _LayoutTypeEnum = LayoutType.LayoutFlat;
 
     [SerializeField]
@@ -138,6 +141,7 @@ public class Instancing : MonoBehaviour
     ComputeBuffer _PrevCubeDataBuffer;
     ComputeBuffer _WaveBuffer;
     ComputeBuffer _PrevWaveBuffer;
+    ComputeBuffer _MeshVerticesBuffer;
 
     /// GPU Instancingの為の引数
     uint[] _GPUInstancingArgs = new uint[5] { 0, 0, 0, 0, 0 };
@@ -167,6 +171,7 @@ public class Instancing : MonoBehaviour
         _PrevCubeDataBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(CubeData)));
         _WaveBuffer = new ComputeBuffer(_instanceCountX, Marshal.SizeOf(typeof(float)));
         _PrevWaveBuffer = new ComputeBuffer(_instanceCountX, Marshal.SizeOf(typeof(float)));
+        _MeshVerticesBuffer = new ComputeBuffer(_instanceCount, Marshal.SizeOf(typeof(Vector3)));
         _GPUInstancingArgsBuffer = new ComputeBuffer(1, _GPUInstancingArgs.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
         //var cubeDataArr = new CubeData[_instanceCount];
 
@@ -177,6 +182,7 @@ public class Instancing : MonoBehaviour
         _ComputeShader.SetBuffer(kernelId, "_CubeDataBuffer", _CubeDataBuffer);
         _ComputeShader.SetBuffer(kernelId, "_BaseCubeDataBuffer", _BaseCubeDataBuffer);
         _ComputeShader.SetBuffer(kernelId, "_PrevCubeDataBuffer", _PrevCubeDataBuffer);
+        _ComputeShader.SetBuffer(kernelId, "_MeshVerticesBuffer", _MeshVerticesBuffer);
         //_ComputeShader.SetBuffer(kernelId, "_WaveBuffer", _WaveBuffer);
         //_ComputeShader.SetBuffer(kernelId, "_PrevWaveBuffer", _PrevWaveBuffer);
         _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_instanceCount / ThreadBlockSize) + 1), 1, 1);
@@ -191,6 +197,17 @@ public class Instancing : MonoBehaviour
 
     void Update()
     {
+        // get skinned mesh vertices
+        _MeshVerticesBuffer.SetData(_SkinnedMeshGrabber.getMesh().vertices);
+        int _MeshVertexCount = _SkinnedMeshGrabber.getMesh().vertices.Length;
+        //Debug.Log(_SkinnedMeshGrabber.getMesh().vertices.Length);
+
+        // generate ComputeBuffer representing vertex array
+        //var vertices = _SkinnedMeshGrabber.getMesh().vertices;
+        //var vertBuffer = new ComputeBuffer(vertices.Length, Marshal.SizeOf(typeof(Vector3)));
+        //vertBuffer.SetData(vertices);
+
+
         // grab osc params
         if (useOsc)
         {
@@ -265,6 +282,8 @@ public class Instancing : MonoBehaviour
         _ComputeShader.SetBuffer(kernelId, "_PrevCubeDataBuffer", _PrevCubeDataBuffer);
         _ComputeShader.SetBuffer(kernelId, "_WaveBuffer", _WaveBuffer);
         _ComputeShader.SetBuffer(kernelId, "_PrevWaveBuffer", _PrevWaveBuffer);
+        _ComputeShader.SetBuffer(kernelId, "_MeshVerticesBuffer", _MeshVerticesBuffer);
+        _ComputeShader.SetInt("_MeshVertexCount", _MeshVertexCount);
         _ComputeShader.SetTexture(kernelId, "_NoiseTex", _NoiseTexture);
 
         _ComputeShader.Dispatch(kernelId, (Mathf.CeilToInt(_instanceCount / ThreadBlockSize) + 1), 1, 1);

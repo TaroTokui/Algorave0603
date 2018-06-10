@@ -29,12 +29,14 @@ RWStructuredBuffer<CubeData> _BaseCubeDataBuffer;
 RWStructuredBuffer<CubeData> _PrevCubeDataBuffer; 
 RWStructuredBuffer<float> _WaveBuffer;
 RWStructuredBuffer<float> _PrevWaveBuffer;
+RWStructuredBuffer<float3> _MeshVerticesBuffer;
 Texture2D<float4> _NoiseTex;
 int _Width;
 int _Height;
 float _StepX;
 float _StepY;
 float _StepZ;
+int _MeshVertexCount;
 
 // 経過時間
 //float _Time;
@@ -238,6 +240,7 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 	float4 noise = _NoiseTex[basePos.xz + float2(_Width / 2, _Height / 2)];
 	float3 prevPos = _CubeDataBuffer[index].Position;
 	float3 prevRot = _CubeDataBuffer[index].Rotation;
+	float3 meshPos = _MeshVerticesBuffer[index%_MeshVertexCount];
 
 	float posX = (index % _Width) / (float)_Width;
 	float posY = (index / _Width) / (float)_Height;
@@ -255,29 +258,29 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 	pos.y = (wave + noise.x) * _Amplitude;
 	
 	// circle
-	//pos.x = cos(posX * PI2) * 20;
-	//pos.z = sin(posX * PI2) * 20;
-	//pos.y = 0;
+	//pos.x = sin(posX * PI2) * 30;
+	//pos.z = cos(posX * PI2) * 30;
+	//pos.y -= 20;
+
 
 	// sylinder
-	//pos = Sylinder(posX, posY, 15);
-	//pos.y -= 10;
-	//pos += wave * normalize(pos) * _Amplitude;
+	pos = Sylinder(posX, posY, 15);
+	pos.y -= 10;
+	pos += wave * normalize(pos) * _Amplitude;
 
 	// sphere
 	//pos = Sphere(posX, posY, 20);
 	//pos.y += wave;
 	//pos += wave * normalize(pos) * _Amplitude;
 
+	// mesh
+	pos = meshPos * 200;
+
 	// noise direction
 	float3 nn = normalize(pos) * noise.x;
-	//pos += nn * _Amplitude * 0.7;
-	//pos += nn * _Amplitude * _InputHigh * 20;
+	pos += nn * _Amplitude * 0.7;
 
-
-	// random
-	//pos = RandomMove(posX, posY);
-	//rot += baseRot * 0.1;
+	//rot = float3(noise.x * 10, noise.x * 20, noise.x * 30);
 
 	// update
 	pos = lerp(pos, prevPos, 0.9);
@@ -301,13 +304,14 @@ void UpdateWave(uint3 id : SV_DispatchThreadID)
 	const unsigned int index = id.x;
 
 	// update wave
-	float length = 10;
+	float length = 5;
 	float value = 0;
 	float a = 1;
 	unsigned int prevIndex = max(0, index - length);
 	//if (_InputKick > 0.5 && posX < 0.1)
 	//if (_InputKick > 0.5 && posX == 0)
-	if (_InputKick > 0.5)
+	//_InputSnare, _InputKick
+	if (_InputSnare > 0.8)
 	{
 		if (index < length)
 		{
