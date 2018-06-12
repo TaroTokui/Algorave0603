@@ -247,9 +247,9 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 
 	float3 pos = float3(0,0,0);
 	float3 rot = float3(0, 0, 0);
-	//rot = float3(noise.x * 10, noise.x * 20, noise.x * 30);
+	rot = float3(noise.x * 10, noise.x * 20, noise.x * 30);
 
-	float wave = _WaveBuffer[index / _Width];// *_Amplitude;
+	float wave = _WaveBuffer[index % _Width];// *_Amplitude;
 
 	// plane
 	pos.x = (posX - 0.5) * 256;
@@ -274,7 +274,9 @@ void UpdateShape(uint3 id : SV_DispatchThreadID)
 	//pos += wave * normalize(pos) * _Amplitude;
 
 	// mesh
-	pos = meshPos * 200;
+	pos = meshPos * 1;
+	//pos.y -= 20;
+	pos += wave * normalize(pos) * _Amplitude;
 
 	// noise direction
 	float3 nn = normalize(pos) * noise.x;
@@ -311,7 +313,7 @@ void UpdateWave(uint3 id : SV_DispatchThreadID)
 	//if (_InputKick > 0.5 && posX < 0.1)
 	//if (_InputKick > 0.5 && posX == 0)
 	//_InputSnare, _InputKick
-	if (_InputSnare > 0.8)
+	if (_InputKick > 0.8)
 	{
 		if (index < length)
 		{

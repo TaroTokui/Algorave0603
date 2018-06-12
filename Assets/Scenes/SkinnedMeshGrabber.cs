@@ -16,7 +16,7 @@ public class SkinnedMeshGrabber : MonoBehaviour {
     void Update()
     {
         skinned.BakeMesh(mesh);
-        //Debug.Log(mesh.vertices[0]);
+        //Debug.Log(mesh.vertices.Length);
     }
 
     public Mesh getMesh()
